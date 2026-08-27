@@ -6,7 +6,7 @@ and watch every player's hole cards land on the classic 13×13 starting-hand cha
 A heat overlay builds up as you deal — so you *see* the premium corner stay cold while
 the junk lights up constantly.
 
-**Live:** _(GitHub Pages link goes here once enabled)_
+**Live:** https://benkim-011.github.io/preflop-trainer/
 
 ## Use it
 - **Players** — slider or +/− stepper, 2 to 10.
