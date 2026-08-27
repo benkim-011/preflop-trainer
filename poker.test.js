@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   makeDeck, shuffle, deal, canonical, gridCell, codeAt,
-  chenScore, tier, comboCount, TOTAL_COMBOS,
+  chenScore, tier, handRank, comboCount, TOTAL_COMBOS,
 } from './poker.js';
 
 const card = (rank, suit) => ({ rank, suit });
@@ -80,6 +80,15 @@ test('tier buckets strongest to weakest', () => {
   assert.equal(tier(10), 2); // good
   assert.equal(tier(6), 3);  // playable
   assert.equal(tier(-1), 4); // marginal
+});
+
+test('handRank ranks strongest as 1 and shares ties', () => {
+  assert.equal(handRank([20, 10, 12], 0), 1); // strongest
+  assert.equal(handRank([20, 10, 12], 1), 3); // weakest of three
+  assert.equal(handRank([20, 10, 12], 2), 2); // middle
+  assert.equal(handRank([12, 12, 5], 0), 1);  // tie for best
+  assert.equal(handRank([12, 12, 5], 1), 1);  // co-leader also rank 1
+  assert.equal(handRank([12, 12, 5], 2), 3);  // one strictly worse -> rank 3
 });
 
 test('comboCount reflects true combo math out of 1326', () => {

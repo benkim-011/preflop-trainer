@@ -136,6 +136,16 @@ export function tier(score) {
 export const TIER_NAMES = ['Premium', 'Strong', 'Good', 'Playable', 'Marginal'];
 
 /**
+ * 1-based strength rank of scores[index] among all scores (1 = strongest).
+ * Ties share the better rank (two co-leaders are both rank 1).
+ */
+export function handRank(scores, index) {
+  const me = scores[index];
+  const strictlyBetter = scores.filter((s) => s > me).length;
+  return strictlyBetter + 1;
+}
+
+/**
  * Number of specific 2-card combos that map to a canonical cell, out of 1326.
  * pair = 6, suited = 4, offsuit = 12. Used for the "true odds" readout.
  */

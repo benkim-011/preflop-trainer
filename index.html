@@ -7,133 +7,142 @@
   <style>
     :root {
       --felt: #0b3d2e;
-      --felt-2: #0e5238;
+      --felt-2: #12694a;
+      --rail: #4a3421;
       --ink: #e9f3ee;
       --muted: #9fb8ac;
       --card-bg: #f7f7f2;
       --card-ink: #1a1a1a;
       --card-red: #c62828;
       --accent: #ffcf3f;
+      --win: #46d17f;
+      --lose: #e0664f;
       --hot: 255, 96, 60;
-      --t0: #d4a017; /* premium */
-      --t1: #2e9e5b; /* strong  */
-      --t2: #2f7fb5; /* good     */
-      --t3: #55636f; /* playable */
-      --t4: #333a41; /* marginal */
+      --tile: #263039;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; }
     body {
       font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
       color: var(--ink);
-      background:
-        radial-gradient(120% 100% at 50% 0%, var(--felt-2), var(--felt) 70%) fixed;
+      background: radial-gradient(120% 100% at 50% 0%, #0e5238, #08281d 75%) fixed;
       min-height: 100vh;
-      padding: 18px clamp(10px, 3vw, 32px) 40px;
+      padding: 16px clamp(8px, 3vw, 28px) 36px;
     }
-    header { text-align: center; margin-bottom: 14px; }
-    h1 { font-size: clamp(20px, 3vw, 30px); margin: 0 0 4px; letter-spacing: .3px; }
-    header p { margin: 0; color: var(--muted); font-size: 13px; }
+    header { text-align: center; margin-bottom: 12px; }
+    h1 { font-size: clamp(18px, 2.6vw, 26px); margin: 0 0 3px; letter-spacing: .3px; }
+    header p { margin: 0; color: var(--muted); font-size: 12px; }
 
     .controls {
-      display: flex; flex-wrap: wrap; gap: 14px 22px;
+      display: flex; flex-wrap: wrap; gap: 12px 20px;
       align-items: center; justify-content: center;
-      background: rgba(0,0,0,.22);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 14px; padding: 14px 18px; margin: 0 auto 20px;
-      max-width: 900px;
+      background: rgba(0,0,0,.24); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px; padding: 12px 16px; margin: 0 auto 12px; max-width: 860px;
     }
-    .ctl { display: flex; align-items: center; gap: 10px; }
-    .ctl label { font-size: 13px; color: var(--muted); }
-    .players-val { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 18px; min-width: 22px; text-align: center; }
+    .ctl { display: flex; align-items: center; gap: 9px; }
+    .ctl label { font-size: 12px; color: var(--muted); }
+    .players-val { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 17px; min-width: 20px; text-align: center; }
     input[type=range] { accent-color: var(--accent); }
     button {
       font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,255,.14);
       color: var(--card-ink); background: var(--accent); font-weight: 700;
-      padding: 10px 20px; transition: transform .04s ease, filter .15s ease;
+      padding: 9px 18px; transition: transform .04s ease, filter .15s ease;
     }
     button:hover { filter: brightness(1.05); }
     button:active { transform: translateY(1px); }
     button.ghost { background: transparent; color: var(--ink); }
-    button.toggle[aria-pressed="true"] { background: #2e9e5b; color: #05271a; }
+    button.toggle[aria-pressed="true"] { background: var(--win); color: #05271a; }
     .stepper { display: inline-flex; align-items: center; gap: 8px; }
-    .stepper button { padding: 6px 12px; border-radius: 8px; }
-
-    .stats { text-align: center; color: var(--muted); font-size: 13px; margin: -8px 0 16px; min-height: 18px; }
+    .stepper button { padding: 5px 11px; border-radius: 8px; }
+    .stats { text-align: center; color: var(--muted); font-size: 12px; margin: 0 0 12px; min-height: 16px; }
     .stats b { color: var(--ink); font-variant-numeric: tabular-nums; }
 
-    /* ---- Table / player hands ---- */
-    .table {
-      display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
-      margin: 0 auto 26px; max-width: 1000px;
+    /* ---- Oval table ---- */
+    .table-area {
+      position: relative; margin: 0 auto 22px;
+      width: min(720px, 96vw); height: min(430px, 62vw); min-height: 300px;
     }
+    .felt {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: radial-gradient(60% 60% at 50% 42%, var(--felt-2), var(--felt) 72%);
+      border: 12px solid var(--rail);
+      box-shadow: inset 0 0 70px rgba(0,0,0,.55), 0 12px 30px rgba(0,0,0,.45);
+    }
+    .center {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      width: 56%; text-align: center; pointer-events: none;
+    }
+    .center .result { font-size: clamp(15px, 2.4vw, 22px); font-weight: 800; letter-spacing: .3px; }
+    .center .sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .center .result.win { color: var(--win); }
+    .center .result.lose { color: var(--lose); }
+    .center .hint { color: var(--muted); font-size: 13px; }
+
     .seat {
-      background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.08);
-      border-radius: 12px; padding: 10px 10px 8px; width: 132px; text-align: center;
-      position: relative;
+      position: absolute; transform: translate(-50%, -50%);
+      width: 104px; text-align: center;
     }
-    .seat.best { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,207,63,.35); }
-    .seat .who { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-    .seat .cards { display: flex; gap: 6px; justify-content: center; }
+    .seat .plate {
+      background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.12);
+      border-radius: 12px; padding: 7px 6px 6px; position: relative;
+    }
+    .seat.me .plate {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(255,207,63,.5), 0 0 18px rgba(255,207,63,.35);
+      background: rgba(46, 30, 0, .55);
+    }
+    .seat.me.win .plate { border-color: var(--win); box-shadow: 0 0 0 2px rgba(70,209,127,.55), 0 0 20px rgba(70,209,127,.45); }
+    .seat.me.lose .plate { border-color: var(--lose); box-shadow: 0 0 0 2px rgba(224,102,79,.5), 0 0 18px rgba(224,102,79,.35); }
+    .seat .who { font-size: 11px; color: var(--muted); margin-bottom: 5px; font-weight: 700; letter-spacing: .4px; }
+    .seat.me .who { color: var(--accent); }
+    .seat .cards { display: flex; gap: 5px; justify-content: center; }
     .card {
-      width: 42px; height: 60px; background: var(--card-bg); color: var(--card-ink);
-      border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,.4);
+      width: 36px; height: 52px; background: var(--card-bg); color: var(--card-ink);
+      border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,.4);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       font-weight: 800; line-height: 1;
     }
-    .card .r { font-size: 17px; }
-    .card .s { font-size: 19px; margin-top: 2px; }
+    .card .r { font-size: 15px; } .card .s { font-size: 16px; margin-top: 2px; }
     .card.red { color: var(--card-red); }
-    .seat .code { margin-top: 7px; font-weight: 800; font-size: 15px; letter-spacing: .5px; }
-    .seat .odds { font-size: 11px; color: var(--muted); }
-    .crown { position: absolute; top: -10px; right: -8px; font-size: 18px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
-
-    /* ---- 13x13 grid ---- */
-    .grid-wrap { max-width: 760px; margin: 0 auto; overflow-x: auto; }
-    .grid {
-      display: grid;
-      grid-template-columns: 22px repeat(13, 1fr);
-      grid-auto-rows: 1fr; gap: 3px; min-width: 560px;
+    .seat .code { margin-top: 5px; font-weight: 800; font-size: 13px; letter-spacing: .5px; }
+    .seat .badge {
+      position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+      font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 10px; white-space: nowrap;
     }
-    .hdr { color: var(--muted); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .seat .badge.win { background: var(--win); color: #05271a; }
+    .seat .badge.lose { background: var(--lose); color: #2a0b06; }
+
+    /* ---- Grid (neutral, smaller) ---- */
+    .grid-wrap { max-width: 500px; margin: 0 auto; overflow-x: auto; }
+    .grid { display: grid; grid-template-columns: 18px repeat(13, 1fr); grid-auto-rows: 1fr; gap: 2px; min-width: 420px; }
+    .hdr { color: var(--muted); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
     .cell {
-      position: relative; aspect-ratio: 1 / 1; border-radius: 5px;
+      position: relative; aspect-ratio: 1 / 1; border-radius: 4px;
       display: flex; align-items: center; justify-content: center;
-      font-size: clamp(8px, 1.1vw, 12px); font-weight: 700; color: #fff;
-      user-select: none; overflow: hidden;
+      font-size: clamp(6px, .95vw, 10px); font-weight: 700; color: #8ea1ac;
+      background: var(--tile); user-select: none; overflow: hidden;
     }
-    .cell.t0 { background: var(--t0); color:#241a00; }
-    .cell.t1 { background: var(--t1); }
-    .cell.t2 { background: var(--t2); }
-    .cell.t3 { background: var(--t3); }
-    .cell.t4 { background: var(--t4); color: #c4ccd2; }
-    .cell .heat {
-      position: absolute; inset: 0; background: rgba(var(--hot), 0); pointer-events: none;
-      transition: background .25s ease;
-    }
-    .cell .cnt {
-      position: absolute; bottom: 1px; right: 3px; font-size: 9px; font-weight: 800;
-      color: rgba(255,255,255,.85); text-shadow: 0 1px 1px rgba(0,0,0,.5);
-    }
+    .cell .heat { position: absolute; inset: 0; background: rgba(var(--hot), 0); pointer-events: none; transition: background .25s ease; }
+    .cell .cnt { position: absolute; bottom: 0; right: 2px; font-size: 8px; font-weight: 800; color: rgba(255,255,255,.8); text-shadow: 0 1px 1px rgba(0,0,0,.5); }
     .cell .lbl { position: relative; z-index: 1; }
-    .cell.active {
-      outline: 3px solid #fff; outline-offset: -1px;
-      box-shadow: 0 0 12px 3px rgba(255,255,255,.75);
-      animation: pop .28s ease;
+    .cell.active { outline: 2px solid rgba(255,255,255,.9); outline-offset: -1px; color: #fff; }
+    .cell.mine {
+      outline: 3px solid var(--accent); outline-offset: -1px; color: #fff; z-index: 2;
+      box-shadow: 0 0 12px 3px rgba(255,207,63,.85); animation: pop .28s ease;
     }
-    @keyframes pop { 0% { transform: scale(.82); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+    @keyframes pop { 0% { transform: scale(.8); } 60% { transform: scale(1.14); } 100% { transform: scale(1); } }
 
-    .legend { display: flex; flex-wrap: wrap; gap: 10px 16px; justify-content: center; margin: 16px auto 0; font-size: 12px; color: var(--muted); max-width: 760px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: center; margin: 14px auto 0; font-size: 12px; color: var(--muted); max-width: 500px; }
     .legend .k { display: inline-flex; align-items: center; gap: 6px; }
-    .swatch { width: 13px; height: 13px; border-radius: 3px; display: inline-block; }
-    footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 22px; }
-    @media (prefers-reduced-motion: reduce) { .cell.active { animation: none; } }
+    .swatch { width: 13px; height: 13px; border-radius: 3px; display: inline-block; border: 1px solid rgba(255,255,255,.2); }
+    footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 20px; }
+    @media (prefers-reduced-motion: reduce) { .cell.mine { animation: none; } }
   </style>
 </head>
 <body>
   <header>
     <h1>♠ Preflop Rarity Trainer ♥</h1>
-    <p>Deal again and again — watch how rarely the good hands actually show up.</p>
+    <p>You're at the bottom seat. Deal again and again — feel how often you're ahead.</p>
   </header>
 
   <div class="controls">
@@ -144,7 +153,7 @@
         <span class="players-val" id="playersVal">6</span>
         <button id="plus" class="ghost" aria-label="more players">+</button>
       </span>
-      <input type="range" id="players" min="2" max="10" value="6" style="width:120px" />
+      <input type="range" id="players" min="2" max="10" value="6" style="width:110px" />
     </div>
     <div class="ctl">
       <button id="deal">Deal &nbsp;<span style="opacity:.6;font-weight:600">(space)</span></button>
@@ -152,61 +161,54 @@
     </div>
     <div class="ctl">
       <label for="speed">Speed</label>
-      <input type="range" id="speed" min="120" max="1200" step="60" value="480" style="width:110px" />
+      <input type="range" id="speed" min="120" max="1200" step="60" value="480" style="width:100px" />
     </div>
-    <div class="ctl">
-      <button id="reset" class="ghost">Reset counts</button>
-    </div>
+    <div class="ctl"><button id="reset" class="ghost">Reset counts</button></div>
   </div>
 
   <div class="stats" id="stats">Press <b>Deal</b> to start.</div>
 
-  <div class="table" id="table"></div>
-
-  <div class="grid-wrap">
-    <div class="grid" id="grid"></div>
+  <div class="table-area">
+    <div class="felt"></div>
+    <div class="center" id="center"><span class="hint">Press <b>Deal</b></span></div>
+    <div id="seats"></div>
   </div>
 
+  <div class="grid-wrap"><div class="grid" id="grid"></div></div>
   <div class="legend" id="legend"></div>
 
   <footer>
-    Strength coloring uses the <b>Chen formula</b> (a simple, transparent heuristic) — for
-    intuition, not GTO/solver precision. True odds: pair 0.45%, suited 0.30%, offsuit 0.90% per specific hand.
+    Win/lose = whether your two cards are the strongest <b>starting hand</b> at the table
+    (<a href="https://www.thepokerbank.com/strategy/basic/starting-hand-selection/chen-formula/" style="color:var(--muted)">Chen formula</a>) —
+    intuition, not a real showdown. Odds per specific hand: pair 0.45%, suited 0.30%, offsuit 0.90%.
   </footer>
 
   <script type="module">
     import {
-      deal, canonical, gridCell, codeAt, chenScore, tier,
-      RANK_LABELS, SUIT_GLYPHS, RED_SUITS, TIER_NAMES, comboCount, TOTAL_COMBOS,
+      deal, canonical, gridCell, codeAt, chenScore, handRank,
+      RANK_LABELS, SUIT_GLYPHS, RED_SUITS,
     } from './poker.js';
 
     const RANK_ORDER = [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2];
-    const TIER_COLORS = ['--t0', '--t1', '--t2', '--t3', '--t4'];
-
     const $ = (id) => document.getElementById(id);
-    const gridEl = $('grid'), tableEl = $('table'), statsEl = $('stats');
-    const playersRange = $('players'), playersVal = $('playersVal');
-    const speedEl = $('speed');
+    const gridEl = $('grid'), seatsEl = $('seats'), centerEl = $('center'), statsEl = $('stats');
+    const playersRange = $('players'), playersVal = $('playersVal'), speedEl = $('speed');
 
-    // ---- build the 13x13 grid once ----
-    const cells = {};            // code -> { el, heat, cnt }
-    const counts = {};           // code -> number of times dealt
-    let totalDeals = 0, totalHands = 0, maxCount = 0;
+    const cells = {};      // code -> { el, heat, cnt }
+    const counts = {};     // code -> times dealt
+    let totalDeals = 0, totalHands = 0, maxCount = 0, wins = 0;
 
     function buildGrid() {
       gridEl.innerHTML = '';
-      gridEl.appendChild(cornerOrHeader('')); // top-left corner
-      for (const r of RANK_ORDER) gridEl.appendChild(cornerOrHeader(RANK_LABELS[r]));
+      gridEl.appendChild(hdr(''));
+      for (const r of RANK_ORDER) gridEl.appendChild(hdr(RANK_LABELS[r]));
       for (let row = 0; row < 13; row++) {
-        gridEl.appendChild(cornerOrHeader(RANK_LABELS[RANK_ORDER[row]]));
+        gridEl.appendChild(hdr(RANK_LABELS[RANK_ORDER[row]]));
         for (let col = 0; col < 13; col++) {
           const code = codeAt(row, col);
-          const canon = canonForCode(code);
-          const t = tier(chenScore(canon));
           const cell = document.createElement('div');
-          cell.className = `cell t${t}`;
-          const pct = (comboCount(canon.kind) / TOTAL_COMBOS * 100).toFixed(2);
-          cell.title = `${code} · ${TIER_NAMES[t]} · ${pct}% per deal`;
+          cell.className = 'cell';
+          cell.title = code;
           const heat = document.createElement('span'); heat.className = 'heat';
           const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = code;
           const cnt = document.createElement('span'); cnt.className = 'cnt';
@@ -217,61 +219,86 @@
         }
       }
     }
-    function cornerOrHeader(txt) { const d = document.createElement('div'); d.className = 'hdr'; d.textContent = txt; return d; }
+    function hdr(txt) { const d = document.createElement('div'); d.className = 'hdr'; d.textContent = txt; return d; }
 
-    // Reconstruct a canonical-like object straight from a chart code (e.g. "AKs").
-    function canonForCode(code) {
-      const L = Object.fromEntries(Object.entries(RANK_LABELS).map(([k, v]) => [v, +k]));
-      const high = L[code[0]], low = L[code[1]];
-      const kind = code.length === 2 ? 'pair' : (code[2] === 's' ? 'suited' : 'offsuit');
-      return { high, low, suited: kind === 'suited', kind, code };
+    // Even placement around the ellipse; seat 0 (you) pinned to bottom-center.
+    function seatPosition(i, n) {
+      const angle = (90 + (i * 360) / n) * Math.PI / 180; // 90deg = bottom
+      const x = 50 + 43 * Math.cos(angle);
+      const y = 50 + 40 * Math.sin(angle);
+      return { x, y };
     }
 
-    // ---- render a deal ----
+    // Opponents shrink as the table fills so nobody overlaps; YOU stays full size.
+    function opponentScale(n) {
+      if (n <= 6) return 1;
+      return Math.max(0.6, 1 - (n - 6) * 0.1);
+    }
+
     let activeCells = [];
     function doDeal() {
       const n = +playersRange.value;
       const hands = deal(n);
       const seats = hands.map((hand) => {
         const canon = canonical(hand);
-        return { hand, canon, cell: gridCell(canon), score: chenScore(canon), t: tier(chenScore(canon)) };
+        return { hand, canon, score: chenScore(canon) };
       });
-      const best = Math.max(...seats.map((s) => s.score));
+      const scores = seats.map((s) => s.score);
+      const myRank = handRank(scores, 0);
+      const iWin = myRank === 1;
 
-      renderSeats(seats, best);
+      renderSeats(seats, scores, n);
+      renderCenter(seats[0], myRank, n, iWin);
 
-      // clear previous active cells
-      for (const c of activeCells) c.classList.remove('active');
+      // grid highlights
+      for (const c of activeCells) c.classList.remove('active', 'mine');
       activeCells = [];
-
       for (const s of seats) {
         counts[s.canon.code]++;
-        if (counts[s.canon.code] > maxCount) maxCount = counts[s.canon.code];
+        maxCount = Math.max(maxCount, counts[s.canon.code]);
       }
-      totalDeals++; totalHands += seats.length;
+      totalDeals++; totalHands += n; if (iWin) wins++;
       refreshHeat();
-      for (const s of seats) {
+      seats.forEach((s, i) => {
         const { el } = cells[s.canon.code];
-        el.classList.add('active');
+        el.classList.add(i === 0 ? 'mine' : 'active');
         activeCells.push(el);
-      }
-      updateStats(seats, best);
+      });
+      // ensure my cell wins the styling even if an opponent shares it
+      cells[seats[0].canon.code].el.classList.add('mine');
+      updateStats();
     }
 
-    function renderSeats(seats, best) {
-      tableEl.innerHTML = '';
+    function renderSeats(seats, scores, n) {
+      seatsEl.innerHTML = '';
       seats.forEach((s, i) => {
+        const me = i === 0;
+        const rank = handRank(scores, i);
         const seat = document.createElement('div');
-        seat.className = 'seat' + (s.score === best ? ' best' : '');
-        const pct = (comboCount(s.canon.kind) / TOTAL_COMBOS * 100).toFixed(2);
+        seat.className = 'seat' + (me ? ' me ' + (rank === 1 ? 'win' : 'lose') : '');
+        const pos = seatPosition(i, n);
+        seat.style.left = pos.x + '%';
+        seat.style.top = pos.y + '%';
+        if (!me) seat.style.transform = `translate(-50%, -50%) scale(${opponentScale(n)})`;
+        const badge = me
+          ? `<span class="badge ${rank === 1 ? 'win' : 'lose'}">${rank === 1 ? 'AHEAD' : 'BEHIND'}</span>`
+          : '';
         seat.innerHTML =
-          (s.score === best ? '<span class="crown">👑</span>' : '') +
-          `<div class="who">Player ${i + 1}</div>` +
+          `<div class="plate">${badge}` +
+          `<div class="who">${me ? 'YOU' : 'P' + (i + 1)}</div>` +
           `<div class="cards">${cardHTML(s.hand[0])}${cardHTML(s.hand[1])}</div>` +
           `<div class="code">${s.canon.code}</div>` +
-          `<div class="odds">${TIER_NAMES[s.t]} · ${pct}%</div>`;
-        tableEl.appendChild(seat);
+          `</div>`;
+        seatsEl.appendChild(seat);
       });
+    }
+
+    function renderCenter(mySeat, myRank, n, iWin) {
+      const cls = iWin ? 'win' : 'lose';
+      const msg = iWin ? (n > 1 ? 'You’re ahead' : 'You’re dealt') : 'You’re behind';
+      centerEl.innerHTML =
+        `<div class="result ${cls}">${msg}</div>` +
+        `<div class="sub">Your ${mySeat.canon.code} — rank <b>${myRank}</b> of ${n}</div>`;
     }
 
     function cardHTML(card) {
@@ -283,42 +310,34 @@
       for (const code in counts) {
         const { heat, cnt } = cells[code];
         const c = counts[code];
-        const alpha = maxCount ? (c / maxCount) * 0.72 : 0;
-        heat.style.background = `rgba(var(--hot), ${alpha.toFixed(3)})`;
+        heat.style.background = `rgba(var(--hot), ${(maxCount ? (c / maxCount) * 0.72 : 0).toFixed(3)})`;
         cnt.textContent = c || '';
       }
     }
 
-    function updateStats(seats, best) {
-      const bestSeat = seats.find((s) => s.score === best);
-      const pairs = seats.filter((s) => s.canon.kind === 'pair').length;
-      statsEl.innerHTML =
-        `Deals: <b>${totalDeals}</b> · Hands seen: <b>${totalHands}</b> · ` +
-        `This deal — best: <b>${bestSeat.canon.code}</b>${pairs ? ` · pairs: <b>${pairs}</b>` : ''}`;
+    function updateStats() {
+      const rate = totalDeals ? Math.round((wins / totalDeals) * 100) : 0;
+      statsEl.innerHTML = `Deals: <b>${totalDeals}</b> · You were best: <b>${wins}</b> (<b>${rate}%</b>) · Hands seen: <b>${totalHands}</b>`;
     }
 
-    // ---- controls ----
-    function setPlayers(n) {
-      n = Math.min(10, Math.max(2, n));
-      playersRange.value = n; playersVal.textContent = n;
-    }
+    function setPlayers(n) { n = Math.min(10, Math.max(2, n)); playersRange.value = n; playersVal.textContent = n; }
     playersRange.addEventListener('input', () => setPlayers(+playersRange.value));
     $('plus').addEventListener('click', () => setPlayers(+playersRange.value + 1));
     $('minus').addEventListener('click', () => setPlayers(+playersRange.value - 1));
     $('deal').addEventListener('click', doDeal);
     $('reset').addEventListener('click', () => {
       for (const code in counts) counts[code] = 0;
-      maxCount = 0; totalDeals = 0; totalHands = 0;
+      maxCount = 0; totalDeals = 0; totalHands = 0; wins = 0;
       refreshHeat();
-      for (const c of activeCells) c.classList.remove('active');
-      activeCells = [];
-      tableEl.innerHTML = '';
+      for (const c of activeCells) c.classList.remove('active', 'mine');
+      activeCells = []; seatsEl.innerHTML = '';
+      centerEl.innerHTML = '<span class="hint">Counts reset. Press <b>Deal</b></span>';
       statsEl.innerHTML = 'Counts reset. Press <b>Deal</b>.';
     });
 
     let autoTimer = null;
     const autoBtn = $('auto');
-    function stopAuto() { clearInterval(autoTimer); autoTimer = null; autoBtn.setAttribute('aria-pressed', 'false'); }
+    function stopAuto() { clearTimeout(autoTimer); autoTimer = null; autoBtn.setAttribute('aria-pressed', 'false'); }
     function startAuto() {
       autoBtn.setAttribute('aria-pressed', 'true');
       const tick = () => { doDeal(); autoTimer = setTimeout(tick, +speedEl.value); };
@@ -326,17 +345,14 @@
     }
     autoBtn.addEventListener('click', () => (autoTimer ? stopAuto() : startAuto()));
     speedEl.addEventListener('input', () => { if (autoTimer) { clearTimeout(autoTimer); startAuto(); } });
-
     document.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
-        e.preventDefault(); doDeal();
-      }
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') { e.preventDefault(); doDeal(); }
     });
 
-    // ---- legend ----
-    $('legend').innerHTML = TIER_NAMES.map((name, i) =>
-      `<span class="k"><span class="swatch" style="background:var(${TIER_COLORS[i]})"></span>${name}</span>`
-    ).join('') + '<span class="k"><span class="swatch" style="background:rgb(var(--hot))"></span>Heat = how often dealt</span>';
+    $('legend').innerHTML =
+      '<span class="k"><span class="swatch" style="background:var(--accent)"></span>Your hand</span>' +
+      '<span class="k"><span class="swatch" style="background:#fff"></span>Opponents this deal</span>' +
+      '<span class="k"><span class="swatch" style="background:rgb(var(--hot))"></span>Heat = how often dealt</span>';
 
     buildGrid();
     setPlayers(6);
