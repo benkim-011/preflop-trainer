@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Preflop Rarity Trainer</title>
+  <style>
+    :root {
+      --felt: #0b3d2e;
+      --felt-2: #0e5238;
+      --ink: #e9f3ee;
+      --muted: #9fb8ac;
+      --card-bg: #f7f7f2;
+      --card-ink: #1a1a1a;
+      --card-red: #c62828;
+      --accent: #ffcf3f;
+      --hot: 255, 96, 60;
+      --t0: #d4a017; /* premium */
+      --t1: #2e9e5b; /* strong  */
+      --t2: #2f7fb5; /* good     */
+      --t3: #55636f; /* playable */
+      --t4: #333a41; /* marginal */
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(120% 100% at 50% 0%, var(--felt-2), var(--felt) 70%) fixed;
+      min-height: 100vh;
+      padding: 18px clamp(10px, 3vw, 32px) 40px;
+    }
+    header { text-align: center; margin-bottom: 14px; }
+    h1 { font-size: clamp(20px, 3vw, 30px); margin: 0 0 4px; letter-spacing: .3px; }
+    header p { margin: 0; color: var(--muted); font-size: 13px; }
+
+    .controls {
+      display: flex; flex-wrap: wrap; gap: 14px 22px;
+      align-items: center; justify-content: center;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px; padding: 14px 18px; margin: 0 auto 20px;
+      max-width: 900px;
+    }
+    .ctl { display: flex; align-items: center; gap: 10px; }
+    .ctl label { font-size: 13px; color: var(--muted); }
+    .players-val { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 18px; min-width: 22px; text-align: center; }
+    input[type=range] { accent-color: var(--accent); }
+    button {
+      font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,255,.14);
+      color: var(--card-ink); background: var(--accent); font-weight: 700;
+      padding: 10px 20px; transition: transform .04s ease, filter .15s ease;
+    }
+    button:hover { filter: brightness(1.05); }
+    button:active { transform: translateY(1px); }
+    button.ghost { background: transparent; color: var(--ink); }
+    button.toggle[aria-pressed="true"] { background: #2e9e5b; color: #05271a; }
+    .stepper { display: inline-flex; align-items: center; gap: 8px; }
+    .stepper button { padding: 6px 12px; border-radius: 8px; }
+
+    .stats { text-align: center; color: var(--muted); font-size: 13px; margin: -8px 0 16px; min-height: 18px; }
+    .stats b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+    /* ---- Table / player hands ---- */
+    .table {
+      display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+      margin: 0 auto 26px; max-width: 1000px;
+    }
+    .seat {
+      background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px; padding: 10px 10px 8px; width: 132px; text-align: center;
+      position: relative;
+    }
+    .seat.best { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,207,63,.35); }
+    .seat .who { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .seat .cards { display: flex; gap: 6px; justify-content: center; }
+    .card {
+      width: 42px; height: 60px; background: var(--card-bg); color: var(--card-ink);
+      border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,.4);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-weight: 800; line-height: 1;
+    }
+    .card .r { font-size: 17px; }
+    .card .s { font-size: 19px; margin-top: 2px; }
+    .card.red { color: var(--card-red); }
+    .seat .code { margin-top: 7px; font-weight: 800; font-size: 15px; letter-spacing: .5px; }
+    .seat .odds { font-size: 11px; color: var(--muted); }
+    .crown { position: absolute; top: -10px; right: -8px; font-size: 18px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+
+    /* ---- 13x13 grid ---- */
+    .grid-wrap { max-width: 760px; margin: 0 auto; overflow-x: auto; }
+    .grid {
+      display: grid;
+      grid-template-columns: 22px repeat(13, 1fr);
+      grid-auto-rows: 1fr; gap: 3px; min-width: 560px;
+    }
+    .hdr { color: var(--muted); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .cell {
+      position: relative; aspect-ratio: 1 / 1; border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(8px, 1.1vw, 12px); font-weight: 700; color: #fff;
+      user-select: none; overflow: hidden;
+    }
+    .cell.t0 { background: var(--t0); color:#241a00; }
+    .cell.t1 { background: var(--t1); }
+    .cell.t2 { background: var(--t2); }
+    .cell.t3 { background: var(--t3); }
+    .cell.t4 { background: var(--t4); color: #c4ccd2; }
+    .cell .heat {
+      position: absolute; inset: 0; background: rgba(var(--hot), 0); pointer-events: none;
+      transition: background .25s ease;
+    }
+    .cell .cnt {
+      position: absolute; bottom: 1px; right: 3px; font-size: 9px; font-weight: 800;
+      color: rgba(255,255,255,.85); text-shadow: 0 1px 1px rgba(0,0,0,.5);
+    }
+    .cell .lbl { position: relative; z-index: 1; }
+    .cell.active {
+      outline: 3px solid #fff; outline-offset: -1px;
+      box-shadow: 0 0 12px 3px rgba(255,255,255,.75);
+      animation: pop .28s ease;
+    }
+    @keyframes pop { 0% { transform: scale(.82); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 10px 16px; justify-content: center; margin: 16px auto 0; font-size: 12px; color: var(--muted); max-width: 760px; }
+    .legend .k { display: inline-flex; align-items: center; gap: 6px; }
+    .swatch { width: 13px; height: 13px; border-radius: 3px; display: inline-block; }
+    footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 22px; }
+    @media (prefers-reduced-motion: reduce) { .cell.active { animation: none; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>♠ Preflop Rarity Trainer ♥</h1>
+    <p>Deal again and again — watch how rarely the good hands actually show up.</p>
+  </header>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="players">Players</label>
+      <span class="stepper">
+        <button id="minus" class="ghost" aria-label="fewer players">–</button>
+        <span class="players-val" id="playersVal">6</span>
+        <button id="plus" class="ghost" aria-label="more players">+</button>
+      </span>
+      <input type="range" id="players" min="2" max="10" value="6" style="width:120px" />
+    </div>
+    <div class="ctl">
+      <button id="deal">Deal &nbsp;<span style="opacity:.6;font-weight:600">(space)</span></button>
+      <button id="auto" class="toggle" aria-pressed="false">Auto-deal</button>
+    </div>
+    <div class="ctl">
+      <label for="speed">Speed</label>
+      <input type="range" id="speed" min="120" max="1200" step="60" value="480" style="width:110px" />
+    </div>
+    <div class="ctl">
+      <button id="reset" class="ghost">Reset counts</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats">Press <b>Deal</b> to start.</div>
+
+  <div class="table" id="table"></div>
+
+  <div class="grid-wrap">
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <footer>
+    Strength coloring uses the <b>Chen formula</b> (a simple, transparent heuristic) — for
+    intuition, not GTO/solver precision. True odds: pair 0.45%, suited 0.30%, offsuit 0.90% per specific hand.
+  </footer>
+
+  <script type="module">
+    import {
+      deal, canonical, gridCell, codeAt, chenScore, tier,
+      RANK_LABELS, SUIT_GLYPHS, RED_SUITS, TIER_NAMES, comboCount, TOTAL_COMBOS,
+    } from './poker.js';
+
+    const RANK_ORDER = [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2];
+    const TIER_COLORS = ['--t0', '--t1', '--t2', '--t3', '--t4'];
+
+    const $ = (id) => document.getElementById(id);
+    const gridEl = $('grid'), tableEl = $('table'), statsEl = $('stats');
+    const playersRange = $('players'), playersVal = $('playersVal');
+    const speedEl = $('speed');
+
+    // ---- build the 13x13 grid once ----
+    const cells = {};            // code -> { el, heat, cnt }
+    const counts = {};           // code -> number of times dealt
+    let totalDeals = 0, totalHands = 0, maxCount = 0;
+
+    function buildGrid() {
+      gridEl.innerHTML = '';
+      gridEl.appendChild(cornerOrHeader('')); // top-left corner
+      for (const r of RANK_ORDER) gridEl.appendChild(cornerOrHeader(RANK_LABELS[r]));
+      for (let row = 0; row < 13; row++) {
+        gridEl.appendChild(cornerOrHeader(RANK_LABELS[RANK_ORDER[row]]));
+        for (let col = 0; col < 13; col++) {
+          const code = codeAt(row, col);
+          const canon = canonForCode(code);
+          const t = tier(chenScore(canon));
+          const cell = document.createElement('div');
+          cell.className = `cell t${t}`;
+          const pct = (comboCount(canon.kind) / TOTAL_COMBOS * 100).toFixed(2);
+          cell.title = `${code} · ${TIER_NAMES[t]} · ${pct}% per deal`;
+          const heat = document.createElement('span'); heat.className = 'heat';
+          const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = code;
+          const cnt = document.createElement('span'); cnt.className = 'cnt';
+          cell.append(heat, lbl, cnt);
+          gridEl.appendChild(cell);
+          cells[code] = { el: cell, heat, cnt };
+          counts[code] = 0;
+        }
+      }
+    }
+    function cornerOrHeader(txt) { const d = document.createElement('div'); d.className = 'hdr'; d.textContent = txt; return d; }
+
+    // Reconstruct a canonical-like object straight from a chart code (e.g. "AKs").
+    function canonForCode(code) {
+      const L = Object.fromEntries(Object.entries(RANK_LABELS).map(([k, v]) => [v, +k]));
+      const high = L[code[0]], low = L[code[1]];
+      const kind = code.length === 2 ? 'pair' : (code[2] === 's' ? 'suited' : 'offsuit');
+      return { high, low, suited: kind === 'suited', kind, code };
+    }
+
+    // ---- render a deal ----
+    let activeCells = [];
+    function doDeal() {
+      const n = +playersRange.value;
+      const hands = deal(n);
+      const seats = hands.map((hand) => {
+        const canon = canonical(hand);
+        return { hand, canon, cell: gridCell(canon), score: chenScore(canon), t: tier(chenScore(canon)) };
+      });
+      const best = Math.max(...seats.map((s) => s.score));
+
+      renderSeats(seats, best);
+
+      // clear previous active cells
+      for (const c of activeCells) c.classList.remove('active');
+      activeCells = [];
+
+      for (const s of seats) {
+        counts[s.canon.code]++;
+        if (counts[s.canon.code] > maxCount) maxCount = counts[s.canon.code];
+      }
+      totalDeals++; totalHands += seats.length;
+      refreshHeat();
+      for (const s of seats) {
+        const { el } = cells[s.canon.code];
+        el.classList.add('active');
+        activeCells.push(el);
+      }
+      updateStats(seats, best);
+    }
+
+    function renderSeats(seats, best) {
+      tableEl.innerHTML = '';
+      seats.forEach((s, i) => {
+        const seat = document.createElement('div');
+        seat.className = 'seat' + (s.score === best ? ' best' : '');
+        const pct = (comboCount(s.canon.kind) / TOTAL_COMBOS * 100).toFixed(2);
+        seat.innerHTML =
+          (s.score === best ? '<span class="crown">👑</span>' : '') +
+          `<div class="who">Player ${i + 1}</div>` +
+          `<div class="cards">${cardHTML(s.hand[0])}${cardHTML(s.hand[1])}</div>` +
+          `<div class="code">${s.canon.code}</div>` +
+          `<div class="odds">${TIER_NAMES[s.t]} · ${pct}%</div>`;
+        tableEl.appendChild(seat);
+      });
+    }
+
+    function cardHTML(card) {
+      const red = RED_SUITS.has(card.suit) ? ' red' : '';
+      return `<div class="card${red}"><span class="r">${RANK_LABELS[card.rank]}</span><span class="s">${SUIT_GLYPHS[card.suit]}</span></div>`;
+    }
+
+    function refreshHeat() {
+      for (const code in counts) {
+        const { heat, cnt } = cells[code];
+        const c = counts[code];
+        const alpha = maxCount ? (c / maxCount) * 0.72 : 0;
+        heat.style.background = `rgba(var(--hot), ${alpha.toFixed(3)})`;
+        cnt.textContent = c || '';
+      }
+    }
+
+    function updateStats(seats, best) {
+      const bestSeat = seats.find((s) => s.score === best);
+      const pairs = seats.filter((s) => s.canon.kind === 'pair').length;
+      statsEl.innerHTML =
+        `Deals: <b>${totalDeals}</b> · Hands seen: <b>${totalHands}</b> · ` +
+        `This deal — best: <b>${bestSeat.canon.code}</b>${pairs ? ` · pairs: <b>${pairs}</b>` : ''}`;
+    }
+
+    // ---- controls ----
+    function setPlayers(n) {
+      n = Math.min(10, Math.max(2, n));
+      playersRange.value = n; playersVal.textContent = n;
+    }
+    playersRange.addEventListener('input', () => setPlayers(+playersRange.value));
+    $('plus').addEventListener('click', () => setPlayers(+playersRange.value + 1));
+    $('minus').addEventListener('click', () => setPlayers(+playersRange.value - 1));
+    $('deal').addEventListener('click', doDeal);
+    $('reset').addEventListener('click', () => {
+      for (const code in counts) counts[code] = 0;
+      maxCount = 0; totalDeals = 0; totalHands = 0;
+      refreshHeat();
+      for (const c of activeCells) c.classList.remove('active');
+      activeCells = [];
+      tableEl.innerHTML = '';
+      statsEl.innerHTML = 'Counts reset. Press <b>Deal</b>.';
+    });
+
+    let autoTimer = null;
+    const autoBtn = $('auto');
+    function stopAuto() { clearInterval(autoTimer); autoTimer = null; autoBtn.setAttribute('aria-pressed', 'false'); }
+    function startAuto() {
+      autoBtn.setAttribute('aria-pressed', 'true');
+      const tick = () => { doDeal(); autoTimer = setTimeout(tick, +speedEl.value); };
+      autoTimer = setTimeout(tick, 0);
+    }
+    autoBtn.addEventListener('click', () => (autoTimer ? stopAuto() : startAuto()));
+    speedEl.addEventListener('input', () => { if (autoTimer) { clearTimeout(autoTimer); startAuto(); } });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+        e.preventDefault(); doDeal();
+      }
+    });
+
+    // ---- legend ----
+    $('legend').innerHTML = TIER_NAMES.map((name, i) =>
+      `<span class="k"><span class="swatch" style="background:var(${TIER_COLORS[i]})"></span>${name}</span>`
+    ).join('') + '<span class="k"><span class="swatch" style="background:rgb(var(--hot))"></span>Heat = how often dealt</span>';
+
+    buildGrid();
+    setPlayers(6);
+  </script>
+</body>
+</html>
